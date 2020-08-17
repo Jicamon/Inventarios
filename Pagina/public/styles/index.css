@@ -1,0 +1,98 @@
+.btnSonidoHanamaru{
+  display: block;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  border: none;
+  outline:none;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  background:url('../images/kunikida_hanamaru_resize.jpg') no-repeat;
+}
+
+.btnSonidoYoshiko{
+  display: block;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  border: none;
+  outline:none;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  background:url('../images/kunikida_hanamaru_resize.jpg') no-repeat;
+}
+
+.centerIzquierda {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 25%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  border: 5px solid rgba(90,84,9,0.75);
+  border-radius: 50%;
+  -webkit-box-shadow: 0px 10px 5px 0px rgba(90,84,9,0.75);
+  -moz-box-shadow: 0px 10px 5px 0px rgba(90,84,9,0.75);
+  box-shadow: 0px 10px 5px 0px rgba(90,84,9,0.75);
+}
+
+.centerDerecha {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 75%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  border: 5px solid rgba(54,54,54,0.75);
+  border-radius: 50%;
+  -webkit-box-shadow: 0px 10px 5px 0px rgba(54,54,54,0.75);
+  -moz-box-shadow: 0px 10px 5px 0px rgba(54,54,54,0.75);
+  box-shadow: 0px 10px 5px 0px rgba(54,54,54,0.75);
+}
+
+.centerIzquierda:active {
+  -webkit-box-shadow: 0px 0px 0px 0px rgba(0,0,0,0.75);
+  -moz-box-shadow: 0px 0px 0px 0px rgba(0,0,0,0.75);
+  box-shadow: 0px 0px 0px 0px rgba(0,0,0,0.75);
+  margin-top: 10px;
+}
+
+.centerDerecha:active {
+  -webkit-box-shadow: 0px 0px 0px 0px rgba(0,0,0,0.75);
+  -moz-box-shadow: 0px 0px 0px 0px rgba(0,0,0,0.75);
+  box-shadow: 0px 0px 0px 0px rgba(0,0,0,0.75);
+  margin-top: 10px;
+}
+
+#carrusel {
+  min-height: 150px;
+  width: 100vw;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  background: rgba(40, 40, 100, 0.25);
+}
+
+.kunikida_hanamaru {
+  width: 150px;
+  height: 150px;
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  background:url('../images/kunikida_hanamaru_resize.jpg') no-repeat;
+}
+
+.tsushima_yoshiko {
+  width: 150px;
+  height: 150px;
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  background:url('../images/tsushima_yoshiko_resize.png') no-repeat;
+}
