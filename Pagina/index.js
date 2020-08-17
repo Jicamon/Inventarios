@@ -14,7 +14,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/perraco', (req, res) => {
-  res.send('putarraca');
+  res.send('');
   insertarBoton(req.query.boton);
 });
 
@@ -25,7 +25,7 @@ app.get('/obtenerBotones', async (req, res) => {
 
 app.get('/guardarArticulo', (req, res) => {
   
-  res.send("CULO");
+  res.send("");
   guardarArticulo(req.query)
   //var resultado = await guardarArticulo();
   //await res.send(resultado);
