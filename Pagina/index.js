@@ -67,8 +67,8 @@ app.get('/crearBaseDeDatos', (req, res) => {
 });
 
 app.get('/obtenerInventario', async (req, res) => {
-  var resultado = await mongoScript.obtenerInventario(req.body);
-  await console.info(resultado);
+  console.info(req.query);
+  var resultado = await mongoScript.obtenerInventario(req.query);
   await res.send(resultado);
 });
 

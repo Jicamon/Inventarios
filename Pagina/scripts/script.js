@@ -23,6 +23,7 @@ function btnAgregarArticuloAlInventario() {
   var articuloCan = parseInt(document.getElementById("cantidadArticulo").value);
   var articuloPre = Number(document.getElementById("precioArticulo").value);
   var articuloFam = parseInt(3);//document.getElementById("familiaArticulo").value;
+  var articuloDes = 'Nada'//document.getElementById("familiaArticulo").value;
 
   var articulo = {
     idArticulo: articuloID,
@@ -30,7 +31,8 @@ function btnAgregarArticuloAlInventario() {
     costoArticulo: articuloCos,
     cantidadArticulo: articuloCan,
     precioArticulo: articuloPre,
-    familiaArticulo: articuloFam
+    familiaArticulo: articuloFam,
+    descripcionArticulo: articuloDes
   }
   agregarArticuloInventario(articulo);
 }
