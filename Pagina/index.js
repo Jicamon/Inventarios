@@ -1,6 +1,7 @@
 const path = require('path');
 const express = require('express');
 const favicon = require('express-favicon');
+const multer = require("multer");
 
 const app = new express();
 console.log('I am running!');
@@ -9,199 +10,73 @@ app.use('/scripts', express.static('./scripts/'));
 app.use(express.static("public"));
 app.use(favicon(__dirname + '/favicon.ico'));
 
+var bodyParser = require("body-parser");
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+
+var mongoScript = require('./scripts/mongo.js');
+
+
+var storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    cb(null, "./public/images"); //here we specify the destination. in this case i specified the current directory
+  },
+  filename: function(req, file, cb) {
+    console.log(file); //log the file object info in console
+    cb(null, file.originalname);//here we specify the file saving name. in this case. 
+//i specified the original file name .you can modify this name to anything you want
+  }
+});
+
+var uploadDisk = multer({ storage: storage });
+
 app.get('/', (req, res) => {
   res.sendFile(path.resolve(__dirname,'views/index.html'));
 });
 
+app.post("/subirImagen", uploadDisk.single("image"), (req, res) => {
+  console.log(" file disk uploaded");
+  res.send("file disk upload success");
+});
+
+
 app.get('/perraco', (req, res) => {
   res.send('');
-  insertarBoton(req.query.boton);
+  mongoScript.insertarBoton(req.query.boton);
 });
 
 app.get('/obtenerBotones', async (req, res) => {
-  var resultado = await leerBotones();
+  var resultado = await mongoScript.leerBotones();
   await res.send(resultado);
 });
 
 app.get('/guardarArticulo', (req, res) => {
   
   res.send("");
-  guardarArticulo(req.query)
+  mongoScript.guardarArticulo(req.query);
   //var resultado = await guardarArticulo();
   //await res.send(resultado);
 });
 
-app.listen(4000, () => {
+app.get('/crearBaseDeDatos', (req, res) => {
+  res.send("");
+  mongoScript.nuevaBaseDeDatos(req.query.nombreDataBase, req.query.nombreTabla);
+  //mongoScript.nuevaBaseDeDatos('Imagenes','Imagenes');
+
 });
 
-async function insertarBoton(nombreBoton)
-{
-  var mongoClient = require('mongodb').MongoClient;
-  try
-  {
-    var cliente = await crearConexion(mongoClient);
-    await insertarZura(cliente,nombreBoton);
-  }
-  catch(e)
-  {
-    console.error(e);
-  }
-  finally
-  {
-    await cliente.close();
-  }
-  
-};
+app.get('/obtenerInventario', async (req, res) => {
+  var resultado = await mongoScript.obtenerInventario(req.body);
+  await console.info(resultado);
+  await res.send(resultado);
+});
 
-async function leerBotones()
-{
-  var mongoClient = require('mongodb').MongoClient;
-  try
-  {
-    var cliente = await crearConexion(mongoClient);
-    return await obtenerBotones(cliente);
-  }
-  catch(e)
-  {
-    console.error(e);
-  }
-  finally
-  {
-    await cliente.close();
-  }
-  
-};
+app.get('/crearBaseDeDatos', (req, res) => {
+  res.send("");  
+  mongoScript.nuevaBaseDeDatos('Imagenes','Imagenes');
+});
 
-async function crearConexion(mongoClient) 
-{
-  
-  const uri = 'mongodb+srv://ChemardoPrueba:corta123@perraco.bg9hv.gcp.mongodb.net/test?retryWrites=true&w=majority';
-  const cliente = new mongoClient(uri);
-  
-  try {
-      // Connect to the MongoDB cluster
-      await cliente.connect();
-      
-      return await cliente;
-  } catch (e) {
-      console.error(e);
-      await cliente.close();
-  }
-  
-};
-
-async function insertarZura(cliente,nombreBoton){
-  var dbo = cliente.db("Botonazos");
-  
-  var query = { nombreBoton: nombreBoton };
-  
-  var result = await dbo.collection("botonContador").find(query).toArray();
-  if(result[0])
-  {
-    var actualizarContador = {$set: {contador: result[0].contador + 1} };
-    await dbo.collection("botonContador").updateMany(query, actualizarContador);
-  }
-  //var script = { nombreBoton: "MiraiZura", contador: 0 };
-  //await dbo.collection('botonContador').insertOne(script);
-};
-
-async function obtenerBotones(cliente){
-  var dbo = cliente.db("Botonazos");
-  
-  var result = await dbo.collection("botonContador").find().sort({nombreBoton:1}).toArray();
-  
-  return await result;
-  //var script = { nombreBoton: "MiraiZura", contador: 0 };
-  //await dbo.collection('botonContador').insertOne(script);
-};
-
-async function guardarArticulo(articulo){
-  var mongoClient = require('mongodb').MongoClient;
-  try{
-    var cliente = await crearConexion(mongoClient);
-    return await guardarArticuloDA(cliente, articulo);
-  }
-  catch(e){
-    console.error(e);
-  }
-  finally{
-    console.log("fainali");
-    await cliente.close();
-  }
-};
-
-async function guardarArticuloDA(cliente, articulo){
-  var resultado;
-  var idArt = {idArticulo: articulo.idArticulo};
-  var articulo2 = articulo;
-  console.log(1);
-  var dbo = cliente.db("Tienda00001");
-  console.log(articulo);
-  return new Promise((resolve, reject) => {
-    dbo.collection("Inventario").find(idArt).toArray(async function(err, result){    
-      console.log(articulo2);
-      console.log(2);
-      if(err) throw err;    
-      console.log(3);
-      if(!result[0]){
-        await dbo.collection("Inventario").insertOne(articulo2, async function(err, res){
-          console.log(articulo2);
-          console.log(4);
-          if(err) throw err;
-          console.log(5);
-          resolve( res );
-        });
-      }
-      else{
-        console.log(6);
-        var suma = parseInt(result[0].cantidadArticulo) + parseInt(articulo.cantidadArticulo);
-        var actualizarExistencia = {$set: {cantidadArticulo: suma}};
-        await dbo.collection("Inventario").updateMany(idArt, actualizarExistencia, function(err, res){
-          console.log(7);
-          if(err) throw err;
-          console.log(8);          
-          resolve( res );
-        });
-        
-      }
-      console.log("Picul");
-      //db.close();    
-  })});
-};
-
-async function guardarArticuloDA2(cliente, articulo){
-  var idTienda = "00001";
-  var resultado;
-  var logsito= 1;
-  var articulo2 = articulo;
-  console.log(1);
-  var dbo = cliente.db("Tienda00001");
-  console.log(articulo);
- 
-      await dbo.collection("Inventario").insertOne(articulo2, async function(err, res){
-        console.log(articulo2);
-        console.log(4);
-        if(err) throw err;
-        console.log(5);
-        resultado = await res;
-      });
-    console.log("Picul");
-    //db.close();
-    return resultado;
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+app.listen(4000, () => {
+});
 
