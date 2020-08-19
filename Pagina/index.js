@@ -36,8 +36,7 @@ app.get('/', (req, res) => {
 });
 
 app.post("/subirImagen", uploadDisk.single("image"), (req, res) => {
-  console.log(" file disk uploaded");
-  res.send("file disk upload success");
+  res.send("success");
 });
 
 
@@ -59,9 +58,9 @@ app.get('/guardarArticulo', (req, res) => {
   //await res.send(resultado);
 });
 
-app.get('/crearBaseDeDatos', (req, res) => {
+app.post('/crearBaseDeDatos', (req, res) => {
   res.send("");
-  mongoScript.nuevaBaseDeDatos(req.query.nombreDataBase, req.query.nombreTabla);
+  mongoScript.nuevaBaseDeDatos(req.body.tienda);
   //mongoScript.nuevaBaseDeDatos('Imagenes','Imagenes');
 
 });
@@ -69,6 +68,34 @@ app.get('/crearBaseDeDatos', (req, res) => {
 app.get('/obtenerInventario', async (req, res) => {
   console.info(req.query);
   var resultado = await mongoScript.obtenerInventario(req.query);
+  await res.send(resultado);
+});
+
+app.get('/guardarArticulo', (req, res) => {
+  
+  res.send("");
+  mongoScript.guardarArticulo(req.query);
+  //var resultado = await guardarArticulo();
+  //await res.send(resultado);
+});
+
+app.post('/agregarFamilia', (req, res) => {
+  res.send("");  
+  mongoScript.agregarFamilia(req.body);
+});
+
+app.post('/agregarSubFamilia', (req, res) => {
+  res.send("");  
+  mongoScript.agregarSubFamilia(req.body);
+});
+
+app.get('/consultarFamilias', async (req, res) => {
+  var resultado = await mongoScript.ConsultarFamilias(req.query);
+  await res.send(resultado);
+});
+
+app.get('/consultarSubFamilias', async (req, res) => {
+  var resultado = await mongoScript.ConsultarSubFamilias(req.query);
   await res.send(resultado);
 });
 

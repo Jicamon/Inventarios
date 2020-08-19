@@ -1,3 +1,5 @@
+const { query } = require('express');
+
 async function insertarBoton(nombreBoton)
 {
   var mongoClient = require('mongodb').MongoClient;
@@ -89,7 +91,6 @@ async function guardarArticulo(articulo){
     console.error(e);
   }
   finally{
-    console.log("fainali");
     await cliente.close();
   }
 };
@@ -98,38 +99,26 @@ async function guardarArticuloDA(cliente, articulo){
   var resultado;
   var idArt = {idArticulo: articulo.idArticulo};
   var articulo2 = articulo;
-  console.log(1);
   var dbo = cliente.db("Tienda00001");
-  console.log(articulo);
   return new Promise((resolve, reject) => {
-    dbo.collection("Inventario").find(idArt).toArray(async function(err, result){    
-      console.log(articulo2);
-      console.log(2);
-      if(err) throw err;    
-      console.log(3);
+    dbo.collection("Inventario").find(idArt).toArray(async function(err, result){
+      if(err) throw err;
       if(!result[0]){
         await dbo.collection("Inventario").insertOne(articulo2, async function(err, res){
-          console.log(articulo2);
-          console.log(4);
           if(err) throw err;
-          console.log(5);
           resolve( res );
         });
       }
       else{
-        console.log(6);
         var suma = parseInt(result[0].cantidadArticulo) + parseInt(articulo.cantidadArticulo);
         var actualizarExistencia = {$set: {cantidadArticulo: suma}};
         await dbo.collection("Inventario").updateMany(idArt, actualizarExistencia, function(err, res){
-          console.log(7);
           if(err) throw err;
-          console.log(8);          
           resolve( res );
         });
         
       }
       console.log("Picul");
-      //db.close();    
   })});
 };
 
@@ -138,37 +127,38 @@ async function guardarArticuloDA2(cliente, articulo){
   var resultado;
   var logsito= 1;
   var articulo2 = articulo;
-  console.log(1);
   var dbo = cliente.db("Tienda00001");
-  console.log(articulo);
  
       await dbo.collection("Inventario").insertOne(articulo2, async function(err, res){
-        console.log(articulo2);
-        console.log(4);
         if(err) throw err;
-        console.log(5);
         resultado = await res;
       });
     console.log("Picul");
-    //db.close();
     return resultado;
 };
 
-async function crearBaseDeDatos(client, nombreBaseDeDatos, nombreTabla){
-    console.log('La quiero crear');
+async function crearBaseDeDatos(client, nombreBaseDeDatos){
     
-    const newDB = await client.db(nombreBaseDeDatos);
-    await newDB.createCollection(nombreTabla);
-    console.log('termine');
+    const newDB = await client.db("Tienda"+nombreBaseDeDatos);
+    await newDB.createCollection("Secuencias");
+    await newDB.collection("Secuencias").insert({
+      "_id":"SecuenciaFamilia",
+      "sequence_value": 0
+    })
+
+    await newDB.collection("Secuencias").insert({
+      "_id":"SecuenciaSubFamilia",
+      "sequence_value": 0
+    })
     
 }
 
-async function nuevaBaseDeDatos(nombreBaseDeDatos, nombreTabla){
+async function nuevaBaseDeDatos(nombreBaseDeDatos){
     var mongoClient = require('mongodb').MongoClient;
     try
     {
-      var cliente = await crearConexion(mongoClient);
-      return await crearBaseDeDatos(cliente, nombreBaseDeDatos, nombreTabla);
+      var client = await crearConexion(mongoClient);
+      return await crearBaseDeDatos(client, nombreBaseDeDatos);
     }
     catch(e)
     {
@@ -176,12 +166,50 @@ async function nuevaBaseDeDatos(nombreBaseDeDatos, nombreTabla){
     }
     finally
     {
-      await cliente.close();
+      await client.close();
     }
 }
 
+async function agregarFamilia(query){
+  var mongoClient = require('mongodb').MongoClient;
+  console.info(query);
+  try
+  {
+    var client = await crearConexion(mongoClient);
+    return await agregarFamiliaTienda(client,query);
+  }
+  catch(e)
+  {
+    console.error(e);
+  }
+  finally
+  {
+    await client.close();
+  }
+
+}
+
+async function agregarSubFamilia(query){
+  var mongoClient = require('mongodb').MongoClient;
+  console.info(query);
+  try
+  {
+    var client = await crearConexion(mongoClient);
+    return await agregarSubFamiliaTienda(client,query);
+  }
+  catch(e)
+  {
+    console.error(e);
+  }
+  finally
+  {
+    await client.close();
+  }
+
+}
+
 async function obtenerInventario(query){
-var mongoClient = require('mongodb').MongoClient;
+  var mongoClient = require('mongodb').MongoClient;
   try
   {
     var client = await crearConexion(mongoClient);
@@ -193,11 +221,9 @@ var mongoClient = require('mongodb').MongoClient;
   }
   finally
   {
-      console.log('finally');
     await client.close();
   }
 }
-
 
 async function obtenerInventarioTienda(client, queary){
   var dbo = client.db("Tienda"+queary.tienda);
@@ -205,16 +231,119 @@ async function obtenerInventarioTienda(client, queary){
   return await dbo.collection("Inventario").find().toArray();
 }
 
+async function agregarFamiliaTienda(client, query){
 
+  var dbo = client.db("Tienda"+query.tienda);
 
+  var id = await getNextSequenceValue(dbo,'SecuenciaFamilia');
 
+  return await dbo.collection("Familia").insertOne({
+    "familiaId":id,
+    "nombreFamilia": query.nombreFamilia
+  })
+}
+
+async function agregarSubFamiliaTienda(client, query){
+
+  var dbo = client.db("Tienda"+query.tienda);
+
+  var id = await getNextSequenceValue(dbo,'SecuenciaSubFamilia');
+
+  return await dbo.collection("SubFamilia").insertOne({
+    "subFamiliaId":id,
+    "nombreSubFamilia": query.nombreSubFamilia,
+    "FamiliaId":query.idFamilia
+  })
+}
+
+async function getNextSequenceValue(dbo,sequenceName){
+
+  return new Promise((resolve, reject) => {
+    var document = dbo.collection("Secuencias").findOneAndUpdate(
+      {_id: sequenceName},
+      {
+        $inc: {
+        sequence_value:1
+        }
+      }
+    ).then(function(result){
+      resolve(result.value.sequence_value);
+    })
+  });
+}
+
+async function ConsultarFamilias(query){
+  var mongoClient = require('mongodb').MongoClient;
+  try
+  {
+    var client = await crearConexion(mongoClient);
+    return await obtenerFamilias(client,query);
+  }
+  catch(e)
+  {
+    console.error(e);
+  }
+  finally
+  {
+    await client.close();
+  }
+}
+
+async function obtenerFamilias(client,query){
+
+  var dbo = client.db("Tienda"+query.tienda);
+
+  return new Promise((resolve, reject) => {
+    dbo.collection("Familia").find().sort({nombreFamilia:1}).toArray()
+    .then(async function(result){
+      await resolve(result);
+    });
+  });
+}
+
+async function ConsultarSubFamilias(query){
+  var mongoClient = require('mongodb').MongoClient;
+  try
+  {
+    var client = await crearConexion(mongoClient);
+    return await obtenerSubFamilias(client,query);
+  }
+  catch(e)
+  {
+    console.error(e);
+  }
+  finally
+  {
+    await client.close();
+  }
+}
+
+async function obtenerSubFamilias(client,query){
+
+  var dbo = client.db("Tienda"+query.tienda);
+
+  var query2 = {FamiliaId: parseInt(query.subFamiliaId)}
+
+  return new Promise((resolve, reject) => {
+    dbo.collection("SubFamilia").find(query2).sort({nombreSubFamilia:1}).toArray()
+    .then(async function(result){
+      console.log(result);
+      await resolve(result);
+    });
+  });
+}
+  
 
 module.exports = {
     insertarBoton: insertarBoton,
     leerBotones: leerBotones,
     guardarArticulo: guardarArticulo,
     nuevaBaseDeDatos: nuevaBaseDeDatos,
-    obtenerInventario: obtenerInventario
+    obtenerInventario: obtenerInventario,
+    agregarFamilia: agregarFamilia,
+    agregarSubFamilia: agregarSubFamilia,
+    ConsultarFamilias: ConsultarFamilias,
+    ConsultarSubFamilias: ConsultarSubFamilias
 }
 
 
